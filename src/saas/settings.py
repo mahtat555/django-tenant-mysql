@@ -30,7 +30,9 @@ DEFAULT_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRDPARTY_APPS = []
+THIRDPARTY_APPS = [
+    "rest_framework"
+]
 
 SHARED_APPS = [
     *DEFAULT_APPS,
@@ -41,12 +43,15 @@ SHARED_APPS = [
 TENANT_APPS = [
     *DEFAULT_APPS,
     *THIRDPARTY_APPS,
+    "apps.books",
+    "apps.ebooks",
 ]
 
 INSTALLED_APPS = SHARED_APPS + \
     [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 MIDDLEWARE = [
+    "tenant.core.middlewares.TenantMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -57,6 +62,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "saas.urls"
+PUBLIC_URLCONF = "saas.public_urls"
 
 TEMPLATES = [
     {
@@ -84,6 +90,14 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "public.sqlite3",
+    },
+    "foo": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "dbfoo.sqlite3",
+    },
+    "bar": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "dbbar.sqlite3",
     }
 }
 
@@ -128,3 +142,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Databases routers
+# Handling multiple databases
+
+DATABASE_ROUTERS = [
+    'tenant.core.router.TenantRouter'
+]

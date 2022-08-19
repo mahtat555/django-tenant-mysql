@@ -1,6 +1,8 @@
 import threading
-from .urls import tenant_db_from_request
+from django.conf import settings
 
+from .urls import tenant_db_from_request
+from saas.settings import ROOT_URLCONF, PUBLIC_URLCONF
 
 THREAD_LOCAL = threading.local()
 
@@ -11,6 +13,11 @@ class TenantMiddleware:
 
     def __call__(self, request):
         db = tenant_db_from_request(request)
+
+        if db is None:
+            settings.ROOT_URLCONF = PUBLIC_URLCONF
+        else:
+            settings.ROOT_URLCONF = ROOT_URLCONF
 
         setattr(THREAD_LOCAL, "DB", db)
         response = self.get_response(request)
