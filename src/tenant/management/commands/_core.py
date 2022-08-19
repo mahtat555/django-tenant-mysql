@@ -1,15 +1,14 @@
 from io import StringIO
 from django.core.management import call_command
-from django.conf import settings
+
+from ...core.settings import SHARED_APPS, TENANT_APPS
 
 
 def get_migration_db(db_name):
 
-    apps = settings.TENANT_APPS
+    apps = TENANT_APPS
     if db_name == "default":
-        apps = settings.SHARED_APPS
-
-    apps = [app.split(".")[-1] for app in apps]
+        apps = SHARED_APPS
 
     result = set()
     out = StringIO()

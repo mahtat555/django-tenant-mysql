@@ -1,17 +1,41 @@
-from .urls import tenant_from_request
+from django.contrib import admin
+
+from .urls import tenant_db_from_request
+from .settings import SHARED_APPS, TENANT_APPS
 
 
-class TenantAdmin:
+class TenantAdmin(admin.ModelAdmin):
     """ Managing the Admin tenants
     """
 
-    def get_queryset(self, request, *args, **kwargs):
-        queryset = super().get_queryset(request, *args, **kwargs)
-        tenant = tenant_from_request(request)
-        queryset = queryset.filter(tenant=tenant)
-        return queryset
+    def has_view_permission(self, request, obj=None):
+        if self._check_permission(request):
+            return super().has_view_permission(request, obj)
+        return False
 
-    def save_model(self, request, obj, form, change):
-        tenant = tenant_from_request(request)
-        obj.tenant = tenant
-        super().save_model(request, obj, form, change)
+    def has_add_permission(self, request):
+        if self._check_permission(request):
+            return super().has_add_permission(request)
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if self._check_permission(request):
+            return super().has_change_permission(request, obj)
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        if self._check_permission(request):
+            return super().has_delete_permission(request, obj)
+        return False
+
+    def _check_permission(self, request):
+        db_name = tenant_db_from_request(request)
+        app_name = self.model._meta.app_label
+
+        if db_name is None:
+            if app_name in SHARED_APPS:
+                return True
+        else:
+            if app_name in TENANT_APPS:
+                return True
+        return False

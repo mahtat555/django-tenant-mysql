@@ -2,7 +2,7 @@
 Used for handling multiple databases
 """
 
-from django.conf import settings
+from .settings import SHARED_APPS, TENANT_APPS
 from .middlewares import get_current_db_name
 
 
@@ -11,10 +11,10 @@ class TenantRouter:
     """
 
     def db_for_read(self, model, **hints):
-        return self._filter(model)
+        return self._get_current_db_name(model)
 
     def db_for_write(self, model, **hints):
-        return self._filter(model)
+        return self._get_current_db_name(model)
 
     def allow_relation(self, *args, **kwargs):
         return True
@@ -25,22 +25,19 @@ class TenantRouter:
     def allow_migrate(self, *args, **kwargs):
         return None
 
-    def _filter(self, model):
+    def _get_current_db_name(self, model):
         """ Get the model table """
-
-        shared_apps = [app.split(".")[-1] for app in settings.SHARED_APPS]
-        tenant_apps = [app.split(".")[-1] for app in settings.TENANT_APPS]
 
         app_name = model._meta.app_label
         db_name = get_current_db_name()
 
-        if db_name and app_name in tenant_apps:
+        if db_name and app_name in TENANT_APPS:
             return db_name
 
-        if app_name in shared_apps:
+        if app_name in SHARED_APPS:
             return "default"
 
-        if app_name not in shared_apps:
+        if app_name not in SHARED_APPS:
             raise Exception(f"No table found for {app_name}")
 
         return "default"
